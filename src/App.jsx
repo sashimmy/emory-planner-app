@@ -460,69 +460,151 @@ export default function EmoryMajorPlanner() {
   // Parse transcript text
   const parseTranscript = (text) => {
     const courses = [];
-    const lines = text.split('\n');
     
-    // Extract student name (look for common patterns in Emory transcripts)
+    // Normalize the text - handle both newline-separated and space-separated formats
+    // PDF extraction often puts everything on one line with spaces
+    let normalizedText = text
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n');
+    
+    // Extract student name
     let studentName = 'Student';
+    const nameMatch = text.match(/Name\s*:\s*([A-Za-z,\s]+?)(?:\s+Student|\s+SSN|\n)/i);
+    if (nameMatch) {
+      // Convert "Chen,Timothy K" to "Timothy Chen"
+      const nameParts = nameMatch[1].trim().split(',');
+      if (nameParts.length >= 2) {
+        studentName = `${nameParts[1].trim().split(' ')[0]} ${nameParts[0].trim()}`;
+      } else {
+        studentName = nameMatch[1].trim();
+      }
+    }
+    
+    // Extract GPA
     let gpa = 0;
+    const gpaMatch = text.match(/(?:CUM|TERM|Career)\s*GPA\s*:\s*(\d+\.\d+)/i);
+    if (gpaMatch) {
+      gpa = parseFloat(gpaMatch[1]);
+    }
+    
+    // Extract total credits
     let totalCredits = 0;
+    const creditsMatch = text.match(/CUM\s*TOTALS?\s*:\s*[\d.]+\s+([\d.]+)/i);
+    if (creditsMatch) {
+      totalCredits = parseFloat(creditsMatch[1]);
+    }
     
-    // Pattern to match course lines: DEPT 123 Course Name 3.00 3.00 A
-    const coursePattern = /^([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+(.+?)\s+([\d.]+)\s+([\d.]+)?\s*([A-Z][+-]?|S|U|T|IP)?$/;
+    // Course patterns for Emory transcripts
+    // Pattern 1: Standard format - DEPT_OX 123 Course Name 3.00 3.00 A
+    // Pattern 2: In-progress courses - DEPT_OX 123 Course Name 3.00
+    // Pattern 3: Test credits - DEPT 123 Course Name 0.00 T or with credits
     
-    // Alternative pattern for courses with different formatting
-    const altCoursePattern = /^([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+(.+?)\s{2,}([\d.]+)\s+([\d.]+)?\s*([A-Z][+-]?|S|U|T|IP)?/;
+    const coursePatterns = [
+      // Pattern with grade and quality points: ECON_OX 101 Principles Of Microeconomics 3.00 3.00 A- 11.100
+      /([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+([A-Za-z][A-Za-z0-9\s&:,.'\/\-]+?)\s+(\d+\.?\d*)\s+(\d+\.?\d*)\s+([A-Z][+-]?|S|U|T)\s+[\d.]+/g,
+      // Pattern with grade, no quality points: ECON_OX 112 Principles Of Macroeconomics 3.00 3.00 T
+      /([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+([A-Za-z][A-Za-z0-9\s&:,.'\/\-]+?)\s+(\d+\.?\d*)\s+(\d+\.?\d*)\s+([A-Z][+-]?|S|U|T)(?:\s|$)/g,
+      // Pattern for in-progress courses: ACT_OX 200 Accounting:The Language of Bus 3.00
+      /([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+([A-Za-z][A-Za-z0-9\s&:,.'\/\-]+?)\s+(\d+\.?\d*)(?:\s+(?:TERM|CUM|$|\n|[A-Z_]+\s+\d))/g,
+      // Pattern for test credits with 0.00: BIOL 141 Foundations of Modern Biol I 0.00 T
+      /([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+([A-Za-z][A-Za-z0-9\s&:,.'\/\-]+?)\s+(0\.00)\s+([A-Z])/g,
+    ];
     
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
+    const seenCourses = new Set();
+    
+    for (const pattern of coursePatterns) {
+      let match;
+      // Reset lastIndex for global patterns
+      pattern.lastIndex = 0;
       
-      // Try to find student name (usually appears early in transcript)
-      if (line.includes('Name:') || line.includes('Student:')) {
-        const nameMatch = line.match(/(?:Name:|Student:)\s*(.+)/i);
-        if (nameMatch) studentName = nameMatch[1].trim();
+      while ((match = pattern.exec(text)) !== null) {
+        const [fullMatch, dept, num, name, credits, earnedOrGrade, gradeOrNull] = match;
+        
+        // Skip if this looks like header text or other non-course content
+        if (name.includes('TERM') || name.includes('Transfer') || name.includes('Credit') || 
+            name.includes('GPA') || name.includes('Page') || name.includes('Print') ||
+            name.includes('Undergraduate') || name.includes('Associate') || name.length < 3) {
+          continue;
+        }
+        
+        // Determine credits and grade based on which pattern matched
+        let creditVal, earnedVal, grade;
+        
+        if (gradeOrNull && /^[A-Z][+-]?$|^[STU]$/.test(gradeOrNull)) {
+          // Pattern with separate earned credits and grade
+          creditVal = parseFloat(credits);
+          earnedVal = parseFloat(earnedOrGrade);
+          grade = gradeOrNull;
+        } else if (/^[A-Z][+-]?$|^[STU]$/.test(earnedOrGrade)) {
+          // Pattern where earnedOrGrade is actually the grade (for 0.00 credit courses)
+          creditVal = parseFloat(credits);
+          earnedVal = 0;
+          grade = earnedOrGrade;
+        } else if (earnedOrGrade) {
+          // Pattern with earned credits but no grade (in progress)
+          creditVal = parseFloat(credits);
+          earnedVal = parseFloat(earnedOrGrade);
+          grade = 'IP';
+        } else {
+          // In-progress course with only attempted credits
+          creditVal = parseFloat(credits);
+          earnedVal = 0;
+          grade = 'IP';
+        }
+        
+        const courseCode = `${dept.replace('_OX', '')} ${num}`;
+        
+        // Skip duplicates
+        if (seenCourses.has(courseCode)) continue;
+        seenCourses.add(courseCode);
+        
+        courses.push({
+          code: courseCode,
+          rawCode: `${dept} ${num}`,
+          name: name.trim(),
+          credits: earnedVal > 0 ? earnedVal : creditVal,
+          attemptedCredits: creditVal,
+          grade: grade,
+          completed: grade && grade !== 'IP',
+          noCredit: earnedVal === 0 && creditVal > 0 && grade === 'T'
+        });
       }
+    }
+    
+    // If still no courses found, try line-by-line parsing
+    if (courses.length === 0) {
+      const lines = normalizedText.split('\n');
+      const linePattern = /^([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+(.+?)\s+(\d+\.?\d*)\s*(\d+\.?\d*)?\s*([A-Z][+-]?|S|U|T|IP)?$/;
       
-      // Try to find GPA
-      if (line.includes('GPA') || line.includes('Grade Point')) {
-        const gpaMatch = line.match(/(\d+\.\d+)/);
-        if (gpaMatch) gpa = parseFloat(gpaMatch[1]);
-      }
-      
-      // Try to find total credits
-      if (line.includes('Total') && line.includes('Credit')) {
-        const creditMatch = line.match(/(\d+\.?\d*)/);
-        if (creditMatch) totalCredits = parseFloat(creditMatch[1]);
-      }
-      
-      // Try to match course lines
-      let match = line.match(coursePattern) || line.match(altCoursePattern);
-      if (match) {
-        const [_, dept, num, name, credits, earnedCredits, grade] = match;
-        if (dept && num && name && credits) {
-          const creditVal = parseFloat(credits);
-          const earnedVal = earnedCredits ? parseFloat(earnedCredits) : creditVal;
-          
-          courses.push({
-            code: `${dept.replace('_OX', '')} ${num}`,
-            rawCode: `${dept} ${num}`,
-            name: name.trim(),
-            credits: earnedVal,
-            attemptedCredits: creditVal,
-            grade: grade || 'IP',
-            completed: grade && grade !== 'IP',
-            noCredit: earnedVal === 0 && creditVal > 0 // Test credit not awarded
-          });
-          
-          // Add to total if we haven't found it elsewhere
-          if (totalCredits === 0 && earnedVal > 0) {
-            totalCredits += earnedVal;
+      for (const line of lines) {
+        const match = line.trim().match(linePattern);
+        if (match) {
+          const [_, dept, num, name, credits, earned, grade] = match;
+          if (dept && num && name && credits && name.length > 2) {
+            const courseCode = `${dept.replace('_OX', '')} ${num}`;
+            if (!seenCourses.has(courseCode)) {
+              seenCourses.add(courseCode);
+              const creditVal = parseFloat(credits);
+              const earnedVal = earned ? parseFloat(earned) : creditVal;
+              
+              courses.push({
+                code: courseCode,
+                rawCode: `${dept} ${num}`,
+                name: name.trim(),
+                credits: earnedVal,
+                attemptedCredits: creditVal,
+                grade: grade || 'IP',
+                completed: grade && grade !== 'IP',
+                noCredit: earnedVal === 0 && creditVal > 0
+              });
+            }
           }
         }
       }
     }
     
-    // Calculate GPA if not found (from graded courses)
-    if (gpa === 0) {
+    // Calculate GPA if not found
+    if (gpa === 0 && courses.length > 0) {
       const gradePoints = { 'A': 4, 'A-': 3.7, 'B+': 3.3, 'B': 3, 'B-': 2.7, 'C+': 2.3, 'C': 2, 'C-': 1.7, 'D+': 1.3, 'D': 1, 'F': 0 };
       let totalPoints = 0;
       let totalGradedCredits = 0;
@@ -539,10 +621,15 @@ export default function EmoryMajorPlanner() {
       }
     }
     
+    // Calculate total credits if not found
+    if (totalCredits === 0) {
+      totalCredits = courses.reduce((sum, c) => sum + (c.credits || 0), 0);
+    }
+    
     return {
       studentName,
       gpa,
-      totalCredits: totalCredits || courses.reduce((sum, c) => sum + (c.credits || 0), 0),
+      totalCredits,
       courses
     };
   };
@@ -555,12 +642,40 @@ export default function EmoryMajorPlanner() {
     setParsing(true);
     
     try {
-      const text = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = reject;
-        reader.readAsText(file);
-      });
+      let text = '';
+      
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        // Handle PDF files using pdf.js
+        const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.mjs');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.mjs';
+        
+        const arrayBuffer = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(file);
+        });
+        
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const textParts = [];
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          textParts.push(pageText);
+        }
+        
+        text = textParts.join('\n');
+      } else {
+        // Handle text files
+        text = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+      }
       
       // Parse the transcript
       const result = parseTranscript(text);
