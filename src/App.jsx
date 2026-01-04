@@ -462,27 +462,89 @@ export default function EmoryMajorPlanner() {
     const courses = [];
     const lines = text.split('\n');
     
-    // Pattern to match course lines
-    const coursePattern = /^([A-Z_]+)\s+(\d+[A-Z]?)\s+(.+?)\s+([\d.]+)\s+([\d.]+)?\s*([A-Z][+-]?|S|T)?/;
+    // Extract student name (look for common patterns in Emory transcripts)
+    let studentName = 'Student';
+    let gpa = 0;
+    let totalCredits = 0;
     
-    for (const line of lines) {
-      const match = line.match(coursePattern);
+    // Pattern to match course lines: DEPT 123 Course Name 3.00 3.00 A
+    const coursePattern = /^([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+(.+?)\s+([\d.]+)\s+([\d.]+)?\s*([A-Z][+-]?|S|U|T|IP)?$/;
+    
+    // Alternative pattern for courses with different formatting
+    const altCoursePattern = /^([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+(.+?)\s{2,}([\d.]+)\s+([\d.]+)?\s*([A-Z][+-]?|S|U|T|IP)?/;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Try to find student name (usually appears early in transcript)
+      if (line.includes('Name:') || line.includes('Student:')) {
+        const nameMatch = line.match(/(?:Name:|Student:)\s*(.+)/i);
+        if (nameMatch) studentName = nameMatch[1].trim();
+      }
+      
+      // Try to find GPA
+      if (line.includes('GPA') || line.includes('Grade Point')) {
+        const gpaMatch = line.match(/(\d+\.\d+)/);
+        if (gpaMatch) gpa = parseFloat(gpaMatch[1]);
+      }
+      
+      // Try to find total credits
+      if (line.includes('Total') && line.includes('Credit')) {
+        const creditMatch = line.match(/(\d+\.?\d*)/);
+        if (creditMatch) totalCredits = parseFloat(creditMatch[1]);
+      }
+      
+      // Try to match course lines
+      let match = line.match(coursePattern) || line.match(altCoursePattern);
       if (match) {
         const [_, dept, num, name, credits, earnedCredits, grade] = match;
         if (dept && num && name && credits) {
+          const creditVal = parseFloat(credits);
+          const earnedVal = earnedCredits ? parseFloat(earnedCredits) : creditVal;
+          
           courses.push({
             code: `${dept.replace('_OX', '')} ${num}`,
             rawCode: `${dept} ${num}`,
             name: name.trim(),
-            credits: parseFloat(credits),
+            credits: earnedVal,
+            attemptedCredits: creditVal,
             grade: grade || 'IP',
-            completed: grade && grade !== 'IP'
+            completed: grade && grade !== 'IP',
+            noCredit: earnedVal === 0 && creditVal > 0 // Test credit not awarded
           });
+          
+          // Add to total if we haven't found it elsewhere
+          if (totalCredits === 0 && earnedVal > 0) {
+            totalCredits += earnedVal;
+          }
         }
       }
     }
     
-    return courses;
+    // Calculate GPA if not found (from graded courses)
+    if (gpa === 0) {
+      const gradePoints = { 'A': 4, 'A-': 3.7, 'B+': 3.3, 'B': 3, 'B-': 2.7, 'C+': 2.3, 'C': 2, 'C-': 1.7, 'D+': 1.3, 'D': 1, 'F': 0 };
+      let totalPoints = 0;
+      let totalGradedCredits = 0;
+      
+      for (const course of courses) {
+        if (course.grade && gradePoints[course.grade] !== undefined && course.credits > 0) {
+          totalPoints += gradePoints[course.grade] * course.credits;
+          totalGradedCredits += course.credits;
+        }
+      }
+      
+      if (totalGradedCredits > 0) {
+        gpa = Math.round((totalPoints / totalGradedCredits) * 1000) / 1000;
+      }
+    }
+    
+    return {
+      studentName,
+      gpa,
+      totalCredits: totalCredits || courses.reduce((sum, c) => sum + (c.credits || 0), 0),
+      courses
+    };
   };
 
   // Handle file upload
@@ -492,53 +554,29 @@ export default function EmoryMajorPlanner() {
     
     setParsing(true);
     
-    // For demo, we'll use a pre-parsed version based on the uploaded transcript
-    // In production, you'd use a PDF parsing library
-    setTimeout(() => {
-      const sampleCourses = [
-        // Transfer Credits
-        { code: 'ECON 112', name: 'Principles Of Macroeconomics', credits: 3, grade: 'T', completed: true },
-        { code: 'MATH 221', name: 'Linear Algebra', credits: 4, grade: 'T', completed: true },
-        // Test Credits (0.00 credits = NOT awarded, should not count for requirements)
-        { code: 'BIOL 141', name: 'Foundations of Modern Biol I', credits: 0, grade: 'T', completed: true, noCredit: true },
-        { code: 'ENG 185', name: 'Writing/Inquiry - Liberal Arts', credits: 3, grade: 'T', completed: true },
-        { code: 'MATH 111', name: 'Calculus I', credits: 3, grade: 'T', completed: true },
-        { code: 'MATH 112', name: 'Calculus II', credits: 0, grade: 'T', completed: true, noCredit: true },
-        { code: 'QTM ELEC', name: 'QTM Elective', credits: 3, grade: 'T', completed: true },
-        // Spring 2025
-        { code: 'BUS 290', name: 'Tech Toolbox A: Excel', credits: 1, grade: 'S', completed: true },
-        { code: 'DSC 101', name: 'Discovery Seminar', credits: 3, grade: 'A', completed: true },
-        { code: 'ECON 101', name: 'Principles Of Microeconomics', credits: 3, grade: 'A-', completed: true },
-        { code: 'INTERN 496R', name: 'Pathways XA Internship', credits: 1, grade: 'S', completed: true },
-        { code: 'MATH 210', name: 'Adv. Calculus for Data Science', credits: 4, grade: 'A', completed: true },
-        { code: 'MUS 213', name: 'Globalization of Gospel Music', credits: 3, grade: 'A', completed: true },
-        { code: 'PE 122', name: 'Beginning Tennis', credits: 1, grade: 'A', completed: true },
-        { code: 'PHIL 120', name: 'Intro to Soc & Pol Philosophy', credits: 3, grade: 'A', completed: true },
-        // Fall 2025
-        { code: 'ACT 200', name: 'Accounting: The Language of Bus', credits: 3, grade: 'IP', completed: false },
-        { code: 'GER 101', name: 'Elementary German I', credits: 4, grade: 'IP', completed: false },
-        { code: 'PSYC 110', name: 'Intro to Psychobiol&Cognition', credits: 3, grade: 'IP', completed: false },
-        { code: 'QTM 110', name: 'Intro to Scientific Methods', credits: 3, grade: 'IP', completed: false },
-        { code: 'REL 348W', name: 'New Testament In Its Context', credits: 4, grade: 'IP', completed: false },
-        // Spring 2026
-        { code: 'BUS 350', name: 'Data and Decision Analytics', credits: 3, grade: 'IP', completed: false },
-        { code: 'DASCI 150', name: 'Intro to Stat. Computing I', credits: 2, grade: 'IP', completed: false },
-        { code: 'DASCI 210', name: 'Probability and Statistics', credits: 4, grade: 'IP', completed: false },
-        { code: 'GER 102', name: 'Elementary German II', credits: 4, grade: 'IP', completed: false },
-        { code: 'HLTH 250', name: 'Foundations in Global Health', credits: 3, grade: 'IP', completed: false },
-        { code: 'MKT 340', name: 'Marketing Management', credits: 3, grade: 'IP', completed: false }
-      ];
-      
-      setTranscriptData({
-        studentName: 'Timothy Chen',
-        studentId: '2704791',
-        gpa: 3.947,
-        totalCredits: 35,
-        courses: sampleCourses
+    try {
+      const text = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsText(file);
       });
+      
+      // Parse the transcript
+      const result = parseTranscript(text);
+      
+      if (result.courses.length > 0) {
+        setTranscriptData(result);
+        setActiveTab('planner');
+      } else {
+        alert('Could not find any courses in the uploaded file. Please make sure you uploaded your transcript from OPUS.');
+      }
+    } catch (error) {
+      console.error('Error reading file:', error);
+      alert('Error reading file. Please try again.');
+    } finally {
       setParsing(false);
-      setActiveTab('planner');
-    }, 1500);
+    }
   };
 
   // Calculate major progress
