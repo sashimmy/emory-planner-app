@@ -1,4 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Set the worker source for pdf.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 // Import Crimson Pro font
 const fontLink = document.createElement('link');
@@ -646,9 +650,6 @@ export default function EmoryMajorPlanner() {
       
       if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
         // Handle PDF files using pdf.js
-        const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.mjs');
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.mjs';
-        
         const arrayBuffer = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (e) => resolve(e.target.result);
