@@ -703,18 +703,28 @@ export default function EmoryMajorPlanner() {
     if (!major) return null;
     
     const completedCore = [];
+    const inProgressCore = [];
     const remainingCore = [];
     let completedCoreCredits = 0;
+    let inProgressCoreCredits = 0;
     
     for (const req of major.core) {
-      // Only count courses that have actual credits awarded (not 0-credit test credits)
       // Use coursesSatisfyRequirement to handle OR alternatives
+      // Find any matching course (completed or in-progress)
       const found = transcriptData.courses.find(c => 
-        coursesSatisfyRequirement(c.code, req.code) && c.credits > 0 && !c.noCredit
+        coursesSatisfyRequirement(c.code, req.code) && !c.noCredit
       );
+      
       if (found) {
-        completedCore.push({ ...req, transcriptMatch: found });
-        completedCoreCredits += req.credits;
+        if (found.grade && found.grade !== 'IP') {
+          // Course is completed with a grade
+          completedCore.push({ ...req, transcriptMatch: found });
+          completedCoreCredits += req.credits;
+        } else {
+          // Course is in-progress (enrolled but no grade yet)
+          inProgressCore.push({ ...req, transcriptMatch: found });
+          inProgressCoreCredits += req.credits;
+        }
       } else {
         remainingCore.push(req);
       }
@@ -724,15 +734,21 @@ export default function EmoryMajorPlanner() {
     const electiveCreditsNeeded = major.electives.minCredits;
     const totalMajorCredits = totalCoreCredits + electiveCreditsNeeded;
     
+    // Progress percent includes both completed and in-progress
+    const totalProgress = completedCoreCredits + inProgressCoreCredits;
+    
     return {
       majorName,
       completedCore,
+      inProgressCore,
       remainingCore,
       completedCoreCredits,
+      inProgressCoreCredits,
       totalCoreCredits,
       electiveCreditsNeeded,
       totalMajorCredits,
-      progressPercent: Math.round((completedCoreCredits / totalMajorCredits) * 100),
+      progressPercent: Math.round((totalProgress / totalMajorCredits) * 100),
+      completedPercent: Math.round((completedCoreCredits / totalMajorCredits) * 100),
       electives: major.electives
     };
   };
@@ -880,33 +896,39 @@ export default function EmoryMajorPlanner() {
     
     for (const [majorName, major] of Object.entries(MAJOR_REQUIREMENTS)) {
       const progress = calculateMajorProgress(majorName);
-      if (progress && progress.completedCore.length > 0) {
+      // Show majors where user has completed OR is taking any core courses
+      const totalMatched = progress ? (progress.completedCore.length + (progress.inProgressCore?.length || 0)) : 0;
+      
+      if (progress && totalMatched > 0) {
         // Calculate total courses needed (core + electives)
         const totalCoursesRequired = major.core.length + (major.electives.required || 0);
-        // Calculate percentage based on core courses completed vs total courses required
-        const matchPercent = Math.round((progress.completedCore.length / totalCoursesRequired) * 100);
+        // Calculate percentage based on courses completed + in-progress vs total required
+        const matchPercent = Math.round((totalMatched / totalCoursesRequired) * 100);
         
         recommendations.push({
           major: majorName,
-          matchedCourses: progress.completedCore.length,
+          matchedCourses: totalMatched,
+          completedCourses: progress.completedCore.length,
+          inProgressCourses: progress.inProgressCore?.length || 0,
           totalRequired: totalCoursesRequired,
           coreRequired: major.core.length,
           remainingCourses: progress.remainingCore.length,
           electivesRequired: major.electives.required || 0,
           creditsCompleted: progress.completedCoreCredits,
+          creditsInProgress: progress.inProgressCoreCredits || 0,
           totalCredits: progress.totalMajorCredits,
           matchPercent: matchPercent
         });
       }
     }
     
-    // Sort by: 1) Most completed core courses first, 2) Then by percentage as tiebreaker
+    // Sort by: 1) Most matched courses first (completed + in-progress), 2) Then by percentage
     return recommendations.sort((a, b) => {
-      // Primary: more completed courses = higher priority
+      // Primary: more matched courses = higher priority
       if (b.matchedCourses !== a.matchedCourses) {
         return b.matchedCourses - a.matchedCourses;
       }
-      // Secondary: higher percentage (fewer remaining) = higher priority
+      // Secondary: higher percentage = higher priority
       return b.matchPercent - a.matchPercent;
     });
   };
@@ -1514,15 +1536,15 @@ export default function EmoryMajorPlanner() {
                                   <div>
                                     <h3 className="font-bold text-lg">{rec.major}</h3>
                                     <p className="text-sm text-gray-600">
-                                      <span className="text-green-600 font-medium">{rec.matchedCourses} core completed</span>
-                                      {' · '}
-                                      <span className="text-orange-600">{rec.remainingCourses} core remaining</span>
-                                      {rec.electivesRequired > 0 && (
+                                      <span className="text-green-600 font-medium">{rec.completedCourses || rec.matchedCourses} completed</span>
+                                      {rec.inProgressCourses > 0 && (
                                         <>
                                           {' · '}
-                                          <span className="text-blue-600">{rec.electivesRequired} electives needed</span>
+                                          <span className="text-blue-600">{rec.inProgressCourses} in progress</span>
                                         </>
                                       )}
+                                      {' · '}
+                                      <span className="text-orange-600">{rec.remainingCourses} remaining</span>
                                     </p>
                                   </div>
                                 </div>
@@ -1554,7 +1576,7 @@ export default function EmoryMajorPlanner() {
                             {/* Expanded Details */}
                             {isExpanded && progress && (
                               <div className="p-4 border-t bg-white">
-                                <div className="grid md:grid-cols-2 gap-6">
+                                <div className="grid md:grid-cols-3 gap-4">
                                   {/* Completed Courses */}
                                   <div>
                                     <h4 className="font-bold text-green-700 mb-3 flex items-center gap-2">
@@ -1579,6 +1601,28 @@ export default function EmoryMajorPlanner() {
                                     </div>
                                   </div>
 
+                                  {/* In-Progress Courses */}
+                                  <div>
+                                    <h4 className="font-bold text-blue-700 mb-3 flex items-center gap-2">
+                                      <span className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-sm">⏳</span>
+                                      In Progress ({progress.inProgressCore?.length || 0})
+                                    </h4>
+                                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                                      {progress.inProgressCore?.map((course, j) => (
+                                        <div key={j} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                          <div className="font-medium text-blue-800">{course.code}</div>
+                                          <div className="text-sm text-blue-600">{course.name}</div>
+                                          <div className="text-xs text-blue-500 mt-1">
+                                            Currently enrolled
+                                          </div>
+                                        </div>
+                                      ))}
+                                      {(!progress.inProgressCore || progress.inProgressCore.length === 0) && (
+                                        <p className="text-sm text-gray-500 italic">No courses in progress</p>
+                                      )}
+                                    </div>
+                                  </div>
+
                                   {/* Remaining Courses */}
                                   <div>
                                     <h4 className="font-bold text-orange-700 mb-3 flex items-center gap-2">
@@ -1594,29 +1638,33 @@ export default function EmoryMajorPlanner() {
                                         </div>
                                       ))}
                                       {progress.remainingCore.length === 0 && (
-                                        <p className="text-sm text-green-600 font-medium">🎉 All core courses completed!</p>
+                                        <p className="text-sm text-green-600 font-medium">🎉 All core courses done!</p>
                                       )}
                                     </div>
+                                  </div>
+                                </div>
 
-                                    {/* Electives */}
-                                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                      <div className="font-medium text-blue-800">+ Electives Required</div>
-                                      <div className="text-sm text-blue-600">
-                                        {progress.electives.required} courses ({progress.electives.minCredits} credits)
-                                      </div>
-                                      <div className="text-xs text-blue-500 mt-1">
-                                        {progress.electives.description}
-                                      </div>
-                                    </div>
+                                {/* Electives */}
+                                <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                  <div className="font-medium text-purple-800">+ Electives Required</div>
+                                  <div className="text-sm text-purple-600">
+                                    {progress.electives.required} courses ({progress.electives.minCredits} credits)
+                                  </div>
+                                  <div className="text-xs text-purple-500 mt-1">
+                                    {progress.electives.description}
                                   </div>
                                 </div>
 
                                 {/* Total Credits Summary */}
                                 <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-between">
                                   <div>
-                                    <div className="font-medium text-gray-800">Total Credits for {rec.major}</div>
+                                    <div className="font-medium text-gray-800">Total Progress for {rec.major}</div>
                                     <div className="text-sm text-gray-600">
-                                      {progress.completedCoreCredits} completed of {progress.totalMajorCredits} required
+                                      <span className="text-green-600">{progress.completedCoreCredits} completed</span>
+                                      {progress.inProgressCoreCredits > 0 && (
+                                        <span className="text-blue-600"> + {progress.inProgressCoreCredits} in progress</span>
+                                      )}
+                                      <span> of {progress.totalMajorCredits} required</span>
                                     </div>
                                   </div>
                                   <div className="text-3xl font-bold" style={{ color: '#004990' }}>
