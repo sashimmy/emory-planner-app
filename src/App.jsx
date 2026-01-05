@@ -498,11 +498,45 @@ export default function EmoryMajorPlanner() {
       totalCredits = parseFloat(creditsMatch[1]);
     }
     
-    // Course patterns for Emory transcripts
-    // Pattern 1: Standard format - DEPT_OX 123 Course Name 3.00 3.00 A
-    // Pattern 2: In-progress courses - DEPT_OX 123 Course Name 3.00
-    // Pattern 3: Test credits - DEPT 123 Course Name 0.00 T or with credits
+    // Extract semester sections and their positions in the text
+    // Pattern matches: "Undergraduate Oxford, Associate of Arts - Fall 2025" or "- - - Transfer Credits - - -"
+    const semesterPattern = /(?:Undergraduate[^-]*-\s*((?:Fall|Spring|Summer)\s+\d{4})|(-\s*-\s*-\s*-?\s*(?:Transfer|Test)\s+Credits?\s*-\s*-\s*-\s*-?))/gi;
+    const semesters = [];
+    let semMatch;
     
+    while ((semMatch = semesterPattern.exec(text)) !== null) {
+      if (semMatch[1]) {
+        // Regular semester (Fall 2025, Spring 2026, etc.)
+        semesters.push({
+          name: semMatch[1].trim(),
+          position: semMatch.index,
+          type: 'semester'
+        });
+      } else if (semMatch[2]) {
+        // Transfer or Test credits section
+        const isTransfer = semMatch[2].toLowerCase().includes('transfer');
+        semesters.push({
+          name: isTransfer ? 'Transfer Credit' : 'Test Credit',
+          position: semMatch.index,
+          type: isTransfer ? 'transfer' : 'test'
+        });
+      }
+    }
+    
+    // Sort semesters by position
+    semesters.sort((a, b) => a.position - b.position);
+    
+    // Function to find which semester a course belongs to based on its position in text
+    const findSemesterForPosition = (position) => {
+      for (let i = semesters.length - 1; i >= 0; i--) {
+        if (position > semesters[i].position) {
+          return semesters[i];
+        }
+      }
+      return null;
+    };
+    
+    // Course patterns for Emory transcripts
     const coursePatterns = [
       // Pattern with grade and quality points: ECON_OX 101 Principles Of Microeconomics 3.00 3.00 A- 11.100
       /([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+([A-Za-z][A-Za-z0-9\s&:,.'\/\-]+?)\s+(\d+\.?\d*)\s+(\d+\.?\d*)\s+([A-Z][+-]?|S|U|T)\s+[\d.]+/g,
@@ -562,6 +596,9 @@ export default function EmoryMajorPlanner() {
         if (seenCourses.has(courseCode)) continue;
         seenCourses.add(courseCode);
         
+        // Find the semester for this course
+        const semesterInfo = findSemesterForPosition(match.index);
+        
         courses.push({
           code: courseCode,
           rawCode: `${dept} ${num}`,
@@ -570,7 +607,9 @@ export default function EmoryMajorPlanner() {
           attemptedCredits: creditVal,
           grade: grade,
           completed: grade && grade !== 'IP',
-          noCredit: earnedVal === 0 && creditVal > 0 && grade === 'T'
+          noCredit: earnedVal === 0 && creditVal > 0 && grade === 'T',
+          semester: semesterInfo?.name || null,
+          semesterType: semesterInfo?.type || null
         });
       }
     }
@@ -579,8 +618,15 @@ export default function EmoryMajorPlanner() {
     if (courses.length === 0) {
       const lines = normalizedText.split('\n');
       const linePattern = /^([A-Z_]+)\s+(\d+[A-Z]?[RW]?)\s+(.+?)\s+(\d+\.?\d*)\s*(\d+\.?\d*)?\s*([A-Z][+-]?|S|U|T|IP)?$/;
+      let currentSemester = null;
       
       for (const line of lines) {
+        // Check for semester header
+        const semMatch = line.match(/(?:Fall|Spring|Summer)\s+\d{4}/i);
+        if (semMatch) {
+          currentSemester = semMatch[0];
+        }
+        
         const match = line.trim().match(linePattern);
         if (match) {
           const [_, dept, num, name, credits, earned, grade] = match;
@@ -599,7 +645,8 @@ export default function EmoryMajorPlanner() {
                 attemptedCredits: creditVal,
                 grade: grade || 'IP',
                 completed: grade && grade !== 'IP',
-                noCredit: earnedVal === 0 && creditVal > 0
+                noCredit: earnedVal === 0 && creditVal > 0,
+                semester: currentSemester
               });
             }
           }
@@ -1608,15 +1655,46 @@ export default function EmoryMajorPlanner() {
                                       In Progress ({progress.inProgressCore?.length || 0})
                                     </h4>
                                     <div className="space-y-2 max-h-64 overflow-y-auto">
-                                      {progress.inProgressCore?.map((course, j) => (
-                                        <div key={j} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                          <div className="font-medium text-blue-800">{course.code}</div>
-                                          <div className="text-sm text-blue-600">{course.name}</div>
-                                          <div className="text-xs text-blue-500 mt-1">
-                                            Currently enrolled
+                                      {progress.inProgressCore?.map((course, j) => {
+                                        const semester = course.transcriptMatch?.semester;
+                                        // Determine if it's a past, current, or future semester
+                                        const now = new Date();
+                                        const currentYear = now.getFullYear();
+                                        const currentMonth = now.getMonth(); // 0-11
+                                        
+                                        let semesterStatus = 'Enrolled';
+                                        if (semester) {
+                                          const semesterMatch = semester.match(/(Fall|Spring|Summer)\s+(\d{4})/i);
+                                          if (semesterMatch) {
+                                            const semSeason = semesterMatch[1].toLowerCase();
+                                            const semYear = parseInt(semesterMatch[2]);
+                                            
+                                            // Approximate semester months: Spring (Jan-May), Summer (Jun-Jul), Fall (Aug-Dec)
+                                            let semEndMonth;
+                                            if (semSeason === 'spring') semEndMonth = 4; // May
+                                            else if (semSeason === 'summer') semEndMonth = 6; // July
+                                            else semEndMonth = 11; // December
+                                            
+                                            if (semYear < currentYear || (semYear === currentYear && semEndMonth < currentMonth)) {
+                                              semesterStatus = `Taken ${semester}`;
+                                            } else if (semYear > currentYear || (semYear === currentYear && semEndMonth > currentMonth + 2)) {
+                                              semesterStatus = `Taking ${semester}`;
+                                            } else {
+                                              semesterStatus = `Taking ${semester}`;
+                                            }
+                                          }
+                                        }
+                                        
+                                        return (
+                                          <div key={j} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                            <div className="font-medium text-blue-800">{course.code}</div>
+                                            <div className="text-sm text-blue-600">{course.name}</div>
+                                            <div className="text-xs text-blue-500 mt-1">
+                                              {semesterStatus}
+                                            </div>
                                           </div>
-                                        </div>
-                                      ))}
+                                        );
+                                      })}
                                       {(!progress.inProgressCore || progress.inProgressCore.length === 0) && (
                                         <p className="text-sm text-gray-500 italic">No courses in progress</p>
                                       )}
