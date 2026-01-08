@@ -356,6 +356,185 @@ const MAJOR_REQUIREMENTS = {
       { code: 'QTM 110', name: 'Intro to Scientific Methods', credits: 3 }
     ],
     electives: { required: 8, minCredits: 26, description: '200+ level HLTH courses' }
+  },
+  'Neuroscience (NBB)': {
+    totalCredits: 48,
+    core: [
+      // Foundation Courses
+      { code: 'BIOL 141', name: 'Foundations of Modern Biology I', credits: 3 },
+      { code: 'BIOL 141L', name: 'Foundations of Modern Biology I Lab', credits: 2 },
+      { code: 'BIOL 142', name: 'Foundations of Modern Biology II', credits: 3 },
+      { code: 'BIOL 142L', name: 'Foundations of Modern Biology II Lab', credits: 2 },
+      { code: 'CHEM 150', name: 'General Chemistry I', credits: 4 },
+      { code: 'QTM 100', name: 'Statistics (OR QTM 110 OR MATH 361)', credits: 4 },
+      { code: 'MATH 111', name: 'Calculus I (OR CS 170 OR QTM 200)', credits: 3 },
+      // Core NBB Courses
+      { code: 'NBB 201', name: 'Neuroscience I: From Dendrite to Behavior', credits: 4 },
+      { code: 'NBB 301', name: 'Neuroscience II: Systems Neurobiology', credits: 4 },
+      { code: 'NBB 302', name: 'Behavioral Biology', credits: 4 },
+      { code: 'NBB 401W', name: 'Perspectives in NBB (OR NBB 402W)', credits: 4 }
+    ],
+    electives: { required: 7, minCredits: 21, description: 'NBB electives from Regular, Limited, and Research categories' }
+  },
+  'Political Science': {
+    totalCredits: 36,
+    core: [
+      { code: 'POLS 100', name: 'Intro to American Government (OR POLS 110 OR 120)', credits: 3 },
+      { code: 'POLS 110', name: 'Intro to Comparative Politics (OR POLS 100 OR 120)', credits: 3 },
+      { code: 'POLS 111', name: 'Principles of Political Science', credits: 3 },
+      { code: 'QTM 100', name: 'Statistics (OR QTM 220 OR ECON 220)', credits: 4 },
+      { code: 'POLS 208', name: 'Political Science Methods', credits: 4 }
+    ],
+    electives: { required: 7, minCredits: 19, description: '300+ level POLS courses including one Research course' }
+  },
+  'Sociology': {
+    totalCredits: 36,
+    core: [
+      { code: 'SOC 101', name: 'Introduction to Sociology', credits: 3 },
+      { code: 'SOC 190', name: 'Sociological Theory', credits: 3 },
+      { code: 'SOC 275', name: 'Social Statistics (OR QTM 100)', credits: 4 },
+      { code: 'SOC 355', name: 'Research Methods in Sociology', credits: 4 },
+      { code: 'SOC 490', name: 'Senior Seminar', credits: 4 }
+    ],
+    electives: { required: 7, minCredits: 18, description: 'SOC courses at any level' }
+  },
+  'Anthropology': {
+    totalCredits: 36,
+    core: [
+      { code: 'ANT 101', name: 'Introduction to Anthropology', credits: 3 },
+      { code: 'ANT 201', name: 'Concepts & Methods in Biological Anthropology', credits: 3 },
+      { code: 'ANT 202', name: 'Concepts & Methods in Cultural Anthropology', credits: 3 },
+      { code: 'ANT 204', name: 'Introduction to Archaeology', credits: 3 },
+      { code: 'ANT 499', name: 'Senior Seminar: Why Anthropology Matters', credits: 4 }
+    ],
+    electives: { required: 7, minCredits: 20, description: 'ANT courses including foundational course, area course, and concentration courses' }
+  },
+  'History': {
+    totalCredits: 35,
+    core: [
+      { code: 'HIST 100', name: 'History Course (any 100-level)', credits: 3 },
+      { code: 'HIST 400W', name: '400-Level Colloquium I', credits: 4 },
+      { code: 'HIST 400W', name: '400-Level Colloquium II', credits: 4 }
+    ],
+    electives: { required: 8, minCredits: 24, description: 'History courses across concentration areas (5 within concentration, 2 outside). 6 must be 300+ level.' }
+  },
+  'English': {
+    totalCredits: 36,
+    core: [
+      { code: 'ENG 205', name: 'Poetry', credits: 4 }
+    ],
+    electives: { required: 9, minCredits: 32, description: 'ENG courses: 1 pre-1700, 1 1700-1900, 1 post-1900, 1 diverse perspectives, 1 theories/methods, 3 additional. At least 5 at 300/400 level.' }
+  },
+  'Environmental Sciences': {
+    totalCredits: 40,
+    core: [
+      { code: 'ENVS 131', name: 'Introduction to Environmental Sciences', credits: 4 },
+      { code: 'ENVS 132', name: 'Environmental Field Studies', credits: 4 },
+      { code: 'ENVS 247', name: 'Ecology (OR BIOL 247)', credits: 4 },
+      { code: 'BIOL 141', name: 'Foundations of Modern Biology I', credits: 3 },
+      { code: 'CHEM 150', name: 'General Chemistry I', credits: 4 },
+      { code: 'QTM 100', name: 'Statistics', credits: 4 }
+    ],
+    electives: { required: 5, minCredits: 17, description: 'ENVS courses from Earth Science, Social Science/Policy, and Ecology tracks' }
+  },
+  'Physics': {
+    totalCredits: 60,
+    core: [
+      { code: 'PHYS 151', name: 'Introductory Mechanics', credits: 4 },
+      { code: 'PHYS 152', name: 'Introductory Electricity & Magnetism', credits: 4 },
+      { code: 'PHYS 212', name: 'Modern Physics', credits: 4 },
+      { code: 'PHYS 220', name: 'Mathematical Methods', credits: 3 },
+      { code: 'PHYS 253', name: 'Modern Physics Lab', credits: 4 },
+      { code: 'PHYS 361', name: 'Classical Mechanics', credits: 4 },
+      { code: 'PHYS 365', name: 'Electricity & Magnetism', credits: 4 },
+      { code: 'PHYS 421', name: 'Thermodynamics & Statistical Mechanics', credits: 4 },
+      { code: 'PHYS 444', name: 'Advanced Lab', credits: 4 },
+      { code: 'PHYS 461', name: 'Quantum Mechanics', credits: 4 },
+      { code: 'MATH 111', name: 'Calculus I', credits: 3 },
+      { code: 'MATH 112', name: 'Calculus II', credits: 3 },
+      { code: 'MATH 211', name: 'Multivariable Calculus', credits: 4 },
+      { code: 'MATH 212', name: 'Differential Equations', credits: 4 }
+    ],
+    electives: { required: 2, minCredits: 7, description: 'Physics electives, one at 300+ level' }
+  },
+  'International Studies': {
+    totalCredits: 36,
+    core: [
+      { code: 'POLS 100', name: 'Intro to American Government (OR POLS 110)', credits: 3 },
+      { code: 'POLS 120', name: 'Intro to International Relations', credits: 3 },
+      { code: 'QTM 100', name: 'Statistics (OR QTM 220 OR ECON 220)', credits: 4 },
+      { code: 'POLS 208', name: 'Political Science Methods', credits: 4 }
+    ],
+    electives: { required: 8, minCredits: 22, description: 'IS-approved courses from POLS and cognate departments. Requires foreign language at 202 level.' }
+  },
+  'African American Studies': {
+    totalCredits: 36,
+    core: [
+      { code: 'AAS 100', name: 'Intro to African American Studies', credits: 4 },
+      { code: 'HIST 338', name: 'African American History to 1865 (OR HIST 339)', credits: 3 },
+      { code: 'AAS 261', name: 'Survey of African American Literature to 1900 (OR AAS 262)', credits: 3 }
+    ],
+    electives: { required: 6, minCredits: 26, description: 'Humanities area, Diaspora area, Civil Rights area courses, plus 3 AAS electives' }
+  },
+  'Women\'s, Gender & Sexuality Studies': {
+    totalCredits: 32,
+    core: [
+      { code: 'WGS 200', name: 'Introduction to Women\'s, Gender & Sexuality Studies', credits: 4 },
+      { code: 'WGS 205W', name: 'Introduction to Studies in Sexualities', credits: 4 },
+      { code: 'WGS 300', name: 'Feminist Theory', credits: 4 }
+    ],
+    electives: { required: 5, minCredits: 20, description: 'WGS courses or DUS-approved electives' }
+  },
+  'Film & Media Studies': {
+    totalCredits: 40,
+    core: [
+      { code: 'FILM 101', name: 'Introduction to Film (OR FILM 150)', credits: 4 },
+      { code: 'FILM 210', name: 'Film History', credits: 4 },
+      { code: 'FILM 312', name: 'Film Theory', credits: 4 }
+    ],
+    electives: { required: 7, minCredits: 28, description: 'FILM courses across production, history, and theory' }
+  },
+  'Art History': {
+    totalCredits: 36,
+    core: [
+      { code: 'ARTHIST 101', name: 'Introduction to Art History I', credits: 4 },
+      { code: 'ARTHIST 102', name: 'Introduction to Art History II', credits: 4 },
+      { code: 'ARTHIST 400', name: '400-Level Seminar', credits: 4 }
+    ],
+    electives: { required: 6, minCredits: 24, description: 'ARTHIST courses with regional-historical distribution. 4 at 300+ level.' }
+  },
+  'Classics': {
+    totalCredits: 36,
+    core: [
+      { code: 'GRK 101', name: 'Elementary Greek I (OR LAT 101)', credits: 4 },
+      { code: 'GRK 102', name: 'Elementary Greek II (OR LAT 102)', credits: 4 },
+      { code: 'CL 101', name: 'Greek Civilization (OR CL 102 Roman)', credits: 3 }
+    ],
+    electives: { required: 7, minCredits: 25, description: 'Advanced Greek/Latin courses and Classics courses' }
+  },
+  'Linguistics': {
+    totalCredits: 32,
+    core: [
+      { code: 'LING 201', name: 'Introduction to Linguistics', credits: 4 },
+      { code: 'LING 302', name: 'Phonetics', credits: 3 },
+      { code: 'LING 303', name: 'Phonology', credits: 3 },
+      { code: 'LING 306', name: 'Syntax', credits: 3 }
+    ],
+    electives: { required: 5, minCredits: 19, description: 'LING electives at 300+ level' }
+  },
+  'Nursing (BSN)': {
+    totalCredits: 60,
+    core: [
+      // Prerequisites (Years 1-2 at Emory/Oxford College)
+      { code: 'CHEM 150', name: 'General Chemistry I with Lab', credits: 4 },
+      { code: 'NRSG 200', name: 'Human Growth and Development', credits: 3 },
+      { code: 'NRSG 201', name: 'Human Anatomy & Physiology I with Lab', credits: 4 },
+      { code: 'NRSG 202', name: 'Human Anatomy & Physiology II with Lab', credits: 4 },
+      { code: 'NRSG 205', name: 'Microbiology with Lab', credits: 4 },
+      { code: 'NRSG 207', name: 'Clinical Nutrition', credits: 3 },
+      { code: 'QTM 100', name: 'Statistics (OR DATASCI 100)', credits: 4 }
+    ],
+    electives: { required: 0, minCredits: 34, description: 'BSN nursing courses in Years 3-4 at School of Nursing. Requires 60 credit hours + 3.0 GPA for guaranteed admission. NCLEX-eligible upon graduation.' }
   }
 };
 
