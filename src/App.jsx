@@ -209,6 +209,7 @@ const GER_REQUIREMENTS = {
 const MAJOR_REQUIREMENTS = {
   'QSS (Quantitative Sciences)': {
     totalCredits: 47,
+    website: 'https://quantitative.emory.edu/',
     core: [
       { code: 'MATH 111', name: 'Calculus I', credits: 3, prereq: true },
       { code: 'MATH 221', name: 'Linear Algebra', credits: 4, prereq: true },
@@ -223,6 +224,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Economics': {
     totalCredits: 36,
+    website: 'https://economics.emory.edu/',
     core: [
       { code: 'ECON 101', name: 'Principles of Microeconomics', credits: 3 },
       { code: 'ECON 112', name: 'Principles of Macroeconomics', credits: 3 },
@@ -236,6 +238,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Business (BBA)': {
     totalCredits: 63,
+    website: 'https://goizueta.emory.edu/undergraduate-business-degree',
     core: [
       // Pre-Business Requirements
       { code: 'BUS 290', name: 'Tech Toolbox A: Excel', credits: 1 },
@@ -262,6 +265,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Psychology': {
     totalCredits: 32,
+    website: 'https://psychology.emory.edu/',
     core: [
       { code: 'PSYC 110', name: 'Intro to Psychobiology & Cognition', credits: 3 },
       { code: 'PSYC 111', name: 'Intro to Social & Personality Psychology', credits: 3 },
@@ -272,6 +276,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Computer Science': {
     totalCredits: 40,
+    website: 'https://cs.emory.edu/',
     core: [
       { code: 'CS 170', name: 'Introduction to Computer Science I', credits: 4 },
       { code: 'CS 171', name: 'Introduction to Computer Science II', credits: 4 },
@@ -285,6 +290,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Data Science': {
     totalCredits: 44,
+    website: 'https://quantitative.emory.edu/',
     core: [
       { code: 'MATH 111', name: 'Calculus I', credits: 3 },
       { code: 'MATH 112', name: 'Calculus II', credits: 3 },
@@ -300,6 +306,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Mathematics': {
     totalCredits: 36,
+    website: 'https://math.emory.edu/',
     core: [
       { code: 'MATH 111', name: 'Calculus I', credits: 3 },
       { code: 'MATH 112', name: 'Calculus II', credits: 3 },
@@ -311,6 +318,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Biology': {
     totalCredits: 40,
+    website: 'https://biology.emory.edu/',
     core: [
       { code: 'BIOL 141', name: 'Foundations of Modern Biology I', credits: 4 },
       { code: 'CHEM 150', name: 'General Chemistry I', credits: 4 },
@@ -320,6 +328,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Chemistry': {
     totalCredits: 38,
+    website: 'https://chemistry.emory.edu/',
     core: [
       { code: 'CHEM 150', name: 'General Chemistry I', credits: 4 },
       { code: 'MATH 111', name: 'Calculus I', credits: 3 },
@@ -329,6 +338,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Philosophy': {
     totalCredits: 30,
+    website: 'https://philosophy.emory.edu/',
     core: [
       { code: 'PHIL 120', name: 'Introduction to Social & Political Philosophy', credits: 3 }
     ],
@@ -336,6 +346,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Religion': {
     totalCredits: 30,
+    website: 'https://religion.emory.edu/',
     core: [
       { code: 'REL 348W', name: 'New Testament In Its Context', credits: 4 }
     ],
@@ -343,6 +354,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Music': {
     totalCredits: 32,
+    website: 'https://music.emory.edu/',
     core: [
       { code: 'MUS 213', name: 'Globalization of Gospel Music', credits: 3 }
     ],
@@ -350,6 +362,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Global Health': {
     totalCredits: 36,
+    website: 'https://humanhealth.emory.edu/',
     core: [
       { code: 'HLTH 250', name: 'Foundations in Global Health', credits: 3 },
       { code: 'BIOL 141', name: 'Foundations of Modern Biology I', credits: 4 },
@@ -359,6 +372,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Neuroscience (NBB)': {
     totalCredits: 48,
+    website: 'https://nbb.emory.edu/',
     core: [
       // Foundation Courses
       { code: 'BIOL 141', name: 'Foundations of Modern Biology I', credits: 3 },
@@ -378,6 +392,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Political Science': {
     totalCredits: 36,
+    website: 'https://polisci.emory.edu/',
     core: [
       { code: 'POLS 100', name: 'Intro to American Government (OR POLS 110 OR 120)', credits: 3 },
       { code: 'POLS 110', name: 'Intro to Comparative Politics (OR POLS 100 OR 120)', credits: 3 },
@@ -389,6 +404,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Sociology': {
     totalCredits: 36,
+    website: 'https://sociology.emory.edu/',
     core: [
       { code: 'SOC 101', name: 'Introduction to Sociology', credits: 3 },
       { code: 'SOC 190', name: 'Sociological Theory', credits: 3 },
@@ -400,6 +416,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Anthropology': {
     totalCredits: 36,
+    website: 'https://anthropology.emory.edu/',
     core: [
       { code: 'ANT 101', name: 'Introduction to Anthropology', credits: 3 },
       { code: 'ANT 201', name: 'Concepts & Methods in Biological Anthropology', credits: 3 },
@@ -411,6 +428,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'History': {
     totalCredits: 35,
+    website: 'https://history.emory.edu/',
     core: [
       { code: 'HIST 100', name: 'History Course (any 100-level)', credits: 3 },
       { code: 'HIST 400W', name: '400-Level Colloquium I', credits: 4 },
@@ -420,6 +438,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'English': {
     totalCredits: 36,
+    website: 'https://english.emory.edu/',
     core: [
       { code: 'ENG 205', name: 'Poetry', credits: 4 }
     ],
@@ -427,6 +446,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Environmental Sciences': {
     totalCredits: 40,
+    website: 'https://envs.emory.edu/',
     core: [
       { code: 'ENVS 131', name: 'Introduction to Environmental Sciences', credits: 4 },
       { code: 'ENVS 132', name: 'Environmental Field Studies', credits: 4 },
@@ -439,6 +459,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Physics': {
     totalCredits: 60,
+    website: 'https://physics.emory.edu/',
     core: [
       { code: 'PHYS 151', name: 'Introductory Mechanics', credits: 4 },
       { code: 'PHYS 152', name: 'Introductory Electricity & Magnetism', credits: 4 },
@@ -459,6 +480,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'International Studies': {
     totalCredits: 36,
+    website: 'https://polisci.emory.edu/undergraduate/degree-options/international-studies.html',
     core: [
       { code: 'POLS 100', name: 'Intro to American Government (OR POLS 110)', credits: 3 },
       { code: 'POLS 120', name: 'Intro to International Relations', credits: 3 },
@@ -469,6 +491,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'African American Studies': {
     totalCredits: 36,
+    website: 'https://aas.emory.edu/',
     core: [
       { code: 'AAS 100', name: 'Intro to African American Studies', credits: 4 },
       { code: 'HIST 338', name: 'African American History to 1865 (OR HIST 339)', credits: 3 },
@@ -478,6 +501,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Women\'s, Gender & Sexuality Studies': {
     totalCredits: 32,
+    website: 'https://wgss.emory.edu/',
     core: [
       { code: 'WGS 200', name: 'Introduction to Women\'s, Gender & Sexuality Studies', credits: 4 },
       { code: 'WGS 205W', name: 'Introduction to Studies in Sexualities', credits: 4 },
@@ -487,6 +511,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Film & Media Studies': {
     totalCredits: 40,
+    website: 'https://filmandmedia.emory.edu/',
     core: [
       { code: 'FILM 101', name: 'Introduction to Film (OR FILM 150)', credits: 4 },
       { code: 'FILM 210', name: 'Film History', credits: 4 },
@@ -496,6 +521,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Art History': {
     totalCredits: 36,
+    website: 'https://arthistory.emory.edu/',
     core: [
       { code: 'ARTHIST 101', name: 'Introduction to Art History I', credits: 4 },
       { code: 'ARTHIST 102', name: 'Introduction to Art History II', credits: 4 },
@@ -505,6 +531,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Classics': {
     totalCredits: 36,
+    website: 'https://classics.emory.edu/',
     core: [
       { code: 'GRK 101', name: 'Elementary Greek I (OR LAT 101)', credits: 4 },
       { code: 'GRK 102', name: 'Elementary Greek II (OR LAT 102)', credits: 4 },
@@ -514,6 +541,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Linguistics': {
     totalCredits: 32,
+    website: 'https://linguistics.emory.edu/',
     core: [
       { code: 'LING 201', name: 'Introduction to Linguistics', credits: 4 },
       { code: 'LING 302', name: 'Phonetics', credits: 3 },
@@ -524,6 +552,7 @@ const MAJOR_REQUIREMENTS = {
   },
   'Nursing (BSN)': {
     totalCredits: 60,
+    website: 'https://nursing.emory.edu/',
     core: [
       // Prerequisites (Years 1-2 at Emory/Oxford College)
       { code: 'CHEM 150', name: 'General Chemistry I with Lab', credits: 4 },
@@ -1928,6 +1957,23 @@ export default function EmoryMajorPlanner() {
                                     {MAJOR_REQUIREMENTS[rec.major]?.totalCredits || progress.totalMajorCredits}
                                   </div>
                                 </div>
+
+                                {/* Department Website Link */}
+                                {MAJOR_REQUIREMENTS[rec.major]?.website && (
+                                  <div className="mt-4">
+                                    <a 
+                                      href={MAJOR_REQUIREMENTS[rec.major].website} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                      </svg>
+                                      Visit {rec.major.replace(' (BSN)', '').replace(' (NBB)', '').replace(' (BBA)', '')} Department Website
+                                    </a>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
